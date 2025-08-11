@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NIC – Nicotine Pouches (Uruguay)</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- Leaflet CSS (safe to keep even if JS fails) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root{
+      --brand:#1FC1A6; /* teal inspired by can design */
+      --brand-dark:#0e9e85;
+      --ink:#0a0f12;
+      --muted:#667085;
+      --bg:#f7faf9;
+      --card:#ffffff;
+      --ring: rgba(31,193,166,.35);
+      --ok:#0ea765; --bad:#c22539; --warn:#c27d0e;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}
+    a{color:var(--brand)}
+    .container{max-width:1100px;margin:0 auto;padding:24px}
+    header{position:sticky;top:0;background:rgba(255,255,255,.8);backdrop-filter:saturate(180%) blur(8px);border-bottom:1px solid #e8eceb;z-index:20}
+    .nav{display:flex;align-items:center;gap:18px;justify-content:space-between}
+    .logo{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.5px}
+    .logo-mark{width:36px;height:36px;border:3px solid var(--brand);border-radius:50%;display:grid;place-items:center;font-weight:800;color:var(--brand)}
+    .pill{padding:6px 10px;border:1px solid #e5e9e8;border-radius:999px;display:inline-flex;align-items:center;gap:8px;background:#fff}
+    .btn{appearance:none;border:0;border-radius:14px;padding:12px 18px;font-weight:700;background:var(--brand);color:#fff;cursor:pointer;box-shadow:0 8px 24px -10px var(--ring)}
+    .btn:hover{background:var(--brand-dark)}
+    .hero{display:grid;grid-template-columns:1.2fr .8fr;gap:28px;align-items:center;padding:48px 0}
+    .hero h1{font-size:clamp(28px,4vw,46px);line-height:1.04;margin:0 0 12px}
+    .hero p{color:var(--muted);font-size:1.05rem;margin:0 0 18px}
+    .price{font-weight:800;font-size:1.4rem;color:var(--ink)}
+    .hero-card{background:var(--card);border:1px solid #e9efee;border-radius:24px;padding:18px}
+    .hero img{width:100%;max-width:520px;filter: drop-shadow(0 24px 36px rgba(0,0,0,.15));}
+
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+    .card{grid-column:span 12;background:var(--card);border:1px solid #e9efee;border-radius:24px;padding:22px}
+    @media(min-width:880px){.card.third{grid-column:span 4}}
+
+    .countdown{display:flex;gap:12px;margin:18px 0}
+    .timebox{min-width:88px;text-align:center;background:#fff;border:1px solid #e9efee;border-radius:14px;padding:12px}
+    .timebox .num{font-size:1.6rem;font-weight:800}
+    .timebox .lbl{font-size:.78rem;color:var(--muted)}
+
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:12px;border-bottom:1px solid #edf2f1;text-align:left}
+    th{font-size:.9rem;color:#33414d}
+
+    #map{width:100%;height:520px;border-radius:22px;border:1px solid #e9efee;background:#fff;display:block}
+    #map .fallback{padding:18px;color:#2a2f2d}
+
+    footer{margin-top:28px;padding:28px 0;color:#5a6460}
+    .badge{display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:999px;font-weight:700;background:#e8fbf7;color:#0c6f5f;border:1px solid #d0f6ee}
+
+    details.diag{margin-top:12px}
+    .tpass{color:var(--ok);font-weight:700}
+    .tfail{color:var(--bad);font-weight:700}
+    .twarn{color:var(--warn);font-weight:700}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="logo" aria-label="NIC Home">
+        <div class="logo-mark">NIC</div>
+        <div>
+          <div>NIC</div>
+          <small style="color:var(--muted);font-weight:600">Nicotine Pouches — Uruguay</small>
+        </div>
+      </div>
+      <div class="pill">
+        <span class="badge">Launch: Dec 1, 2025</span>
+        <button class="btn" onclick="document.getElementById('where-to-buy').scrollIntoView({behavior:'smooth'})">Where to Buy</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- HERO -->
+    <section class="hero">
+      <div>
+        <h1>Clean, modern nicotine—without smoke or vapor.</h1>
+        <p>NIC pouches deliver nicotine discreetly—no burning, no aerosol, no lingering odor. Launching in Uruguay on <strong>December 1st, 2025</strong>.</p>
+        <div class="countdown" aria-live="polite" aria-label="Countdown to launch">
+          <div class="timebox"><div class="num" id="d">–</div><div class="lbl">Days</div></div>
+          <div class="timebox"><div class="num" id="h">–</div><div class="lbl">Hours</div></div>
+          <div class="timebox"><div class="num" id="m">–</div><div class="lbl">Minutes</div></div>
+          <div class="timebox"><div class="num" id="s">–</div><div class="lbl">Seconds</div></div>
+        </div>
+        <div class="price">Price at launch: <strong>UYU 400</strong> per can (20 pouches)</div>
+      </div>
+      <div class="hero-card">
+        <!-- The exact uploaded image; place New-1.jpg next to this file or in /mnt/data/New-1.jpg -->
+       
+      </div>
+    </section>
+
+    <!-- SCIENCE / HEALTH COMPARISON -->
+    <section class="grid" id="science">
+      <article class="card third">
+        <h3>What are nicotine pouches?</h3>
+        <p>Small, tobacco‑leaf‑free pouches that go under your lip. They deliver nicotine and flavor and are spit‑free and smokeless.</p>
+      </article>
+      <article class="card third">
+        <h3>Why they’re different</h3>
+        <p>Because there is <em>no burning</em> (combustion) and <em>no aerosolization</em> of e‑liquid, nicotine pouches don’t create smoke or vapor. That means no ash, tar, or second‑hand smoke.</p>
+      </article>
+      <article class="card third">
+        <h3>What the research says</h3>
+        <p><strong>Azzopardi et al., 2021</strong> (Drug and Chemical Toxicology) compared modern oral nicotine pouches with cigarettes using biomarkers of exposure. In adult participants who used pouches exclusively, levels of several smoke‑related toxicant biomarkers were <strong>substantially lower than in cigarette smokers</strong>, and in some cases close to levels seen in non‑smokers or users of nicotine replacement therapy. <small><a href="https://doi.org/10.1080/01480545.2021.1925691" target="_blank" rel="noopener">Read the study</a></small></p>
+      </article>
+
+      <article class="card" style="grid-column:span 12">
+        <h3>At‑a‑glance comparison</h3>
+        <p style="color:var(--muted);margin-top:-6px">Summary based on the Azzopardi et al. findings and general product characteristics. Individual experiences vary. NIC pouches are not risk‑free and contain nicotine, an addictive chemical.</p>
+        <div style="overflow:auto">
+          <table aria-label="Comparison table: nicotine pouches vs other products">
+            <thead>
+              <tr>
+                <th>Product type</th>
+                <th>How nicotine is delivered</th>
+                <th>Combustion / aerosol</th>
+                <th>Typical toxicant exposure* </th>
+                <th>Odor / residue</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>NIC pouches</strong></td>
+                <td>Oral absorption (under‑lip)</td>
+                <td>No combustion, no vapor</td>
+                <td><strong>Substantially lower than cigarettes</strong> for measured smoke‑related biomarkers; often near NRT levels*</td>
+                <td>Minimal odor; no smoke residue</td>
+              </tr>
+              <tr>
+                <td>Cigarettes</td>
+                <td>Inhaled smoke from burning tobacco</td>
+                <td><strong>Combustion</strong> (smoke)</td>
+                <td>High exposure to many harmful and potentially harmful constituents</td>
+                <td>Strong odor; smoke and ash residue</td>
+              </tr>
+              <tr>
+                <td>Vapes (e‑cigarettes)</td>
+                <td>Inhaled aerosol from heated e‑liquid</td>
+                <td>No burning; <strong>aerosol</strong> is produced</td>
+                <td>Generally lower than cigarettes, varies by device and use</td>
+                <td>Noticeable vapor smell; no ash</td>
+              </tr>
+              <tr>
+                <td>NRT (gum/lozenge)</td>
+                <td>Oral absorption</td>
+                <td>No combustion or aerosol</td>
+                <td>Low; used for cessation under labeling</td>
+                <td>Minimal odor; medicinal taste</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:.85rem;color:var(--muted);margin-top:8px">* Based on biomarker data summarized in Azzopardi, D. et al. (2021). Drug and Chemical Toxicology. This does not mean zero risk. NIC is intended for adult nicotine consumers only.</p>
+      </article>
+    </section>
+
+    <!-- WHERE TO BUY / MAP -->
+    <section id="where-to-buy" class="card" style="margin-top:18px">
+      <h2>Where to buy in Uruguay</h2>
+      <p>Use the interactive map to zoom around Uruguay and tap a pin to see store information. Initial availability is limited; locations shown here are examples.</p>
+      <div id="map" role="application" aria-label="Interactive map of Uruguay with NIC retailers">
+        <div class="fallback" id="map-fallback" hidden>
+          <strong>Map unavailable.</strong> Your network may be blocking map scripts. You can still find example retailers below:
+          <ul id="fallback-list" style="margin-top:8px"></ul>
+        </div>
+      </div>
+      <button class="btn" style="margin-top:12px" id="diagBtn" type="button">Run health check</button>
+      <details class="diag"><summary>Diagnostics</summary>
+        <ul id="diag"></ul>
+      </details>
+    </section>
+
+    <footer class="container">
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+        <small>© <span id="yr"></span> NIC. All rights reserved. Price: UYU 400 per can at launch.</small>
+        <small>Health information: <a href="https://doi.org/10.1080/01480545.2021.1925691" target="_blank" rel="noopener">Azzopardi et al., 2021</a>. Not medical advice.</small>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    // ------------------ Countdown ------------------
+    (function(){
+      const target = new Date('2025-12-01T00:00:00-03:00').getTime();
+      const el = {d:document.getElementById('d'),h:document.getElementById('h'),m:document.getElementById('m'),s:document.getElementById('s')};
+      function pad(n){return (n<10?'0':'')+n}
+      setInterval(()=>{
+        const now = Date.now();
+        let diff = Math.max(0, target - now);
+        const days = Math.floor(diff/(1000*60*60*24)); diff -= days*24*60*60*1000;
+        const hrs  = Math.floor(diff/(1000*60*60)); diff -= hrs*60*60*1000;
+        const mins = Math.floor(diff/(1000*60)); diff -= mins*60*1000;
+        const secs = Math.floor(diff/1000);
+        el.d.textContent = days; el.h.textContent = pad(hrs); el.m.textContent = pad(mins); el.s.textContent = pad(secs);
+      }, 1000);
+    })();
+
+    // ------------------ Leaflet loader with fallbacks ------------------
+    const STORE_DATA = [
+      {name:'NIC – Tienda Centro', type:'Retail', address:'Av. 18 de Julio 1234, Montevideo', coords:[-34.905, -56.191]},
+      {name:'Estación ANCAP – Pocitos', type:'Gas Station', address:'Av. Brasil 2500, Montevideo', coords:[-34.916, -56.151]},
+      {name:'Shop Punta Brava', type:'Retail', address:'Gorlero 728, Punta del Este', coords:[-34.966, -54.951]},
+      {name:'Estación ANCAP – Maldonado', type:'Gas Station', address:'Av. Roosevelt 123, Maldonado', coords:[-34.908, -54.953]},
+      {name:'MaxiMarket Colonia', type:'Retail', address:'Gral. Flores 350, Colonia del Sacramento', coords:[-34.468, -57.844]},
+      {name:'Kiosco Salto Centro', type:'Retail', address:'Uruguay 765, Salto', coords:[-31.384, -57.966]}
+    ];
+
+    function loadScript(url, timeoutMs=6000){
+      return new Promise((resolve,reject)=>{
+        const s = document.createElement('script');
+        s.src = url; s.async = true; s.defer = true; s.crossOrigin = '';
+        let done = false;
+        const t = setTimeout(()=>{ if(!done){ done=true; s.remove(); reject(new Error('timeout')) } }, timeoutMs);
+        s.onload = ()=>{ if(!done){ done=true; clearTimeout(t); resolve(); } };
+        s.onerror = ()=>{ if(!done){ done=true; clearTimeout(t); reject(new Error('load error')); } };
+        document.head.appendChild(s);
+      });
+    }
+
+    async function ensureLeaflet(){
+      if (window.L) return true;
+      try{
+        // try unpkg first
+        await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+      }catch(e){ /* ignore and try next */ }
+      if (window.L) return true;
+      try{
+        // fallback mirrors
+        await loadScript('https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js');
+      }catch(e){ /* ignore */ }
+      return !!window.L;
+    }
+
+    function initMap(){
+      const mapEl = document.getElementById('map');
+      if (!window.L){
+        // Final fallback: show list of stores so the page still works without crashing
+        const fb = document.getElementById('map-fallback');
+        const ul = document.getElementById('fallback-list');
+        ul.innerHTML = STORE_DATA.map(s=>`<li><strong>${s.name}</strong> — ${s.address} <em>(${s.type})</em></li>`).join('');
+        fb.hidden = false;
+        return false;
+      }
+      const map = L.map('map', { scrollWheelZoom:true }).setView([-32.8, -56.0], 6);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+      const nicIcon = L.divIcon({
+        html: `<div style="display:grid;place-items:center;width:28px;height:28px;background:var(--brand);color:#fff;border-radius:8px;font-weight:800">N</div>`,
+        className: 'nic-pin', iconSize:[28,28]
+      });
+      STORE_DATA.forEach(s=>{
+        const m = L.marker(s.coords, {icon:nicIcon}).addTo(map);
+        m.bindPopup(`<strong>${s.name}</strong><br/><small>${s.type}</small><br/>${s.address}`);
+      });
+      return true;
+    }
+
+    (async function(){
+      const ok = await ensureLeaflet();
+      window.__leafletReady = ok; // exposed for diagnostics
+      initMap();
+    })();
+
+    // ------------------ Diagnostics (simple runtime tests) ------------------
+    function addResult(text, ok, warn=false){
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="${ok? 'tpass' : (warn? 'twarn' : 'tfail')}">[${ok? 'PASS' : (warn? 'WARN' : 'FAIL')}]</span> ${text}`;
+      document.getElementById('diag').appendChild(li);
+    }
+
+    function runDiagnostics(){
+      const d = document.getElementById('d').textContent.trim();
+      const h = document.getElementById('h').textContent.trim();
+      const m = document.getElementById('m').textContent.trim();
+      const s = document.getElementById('s').textContent.trim();
+      addResult('Countdown numbers render', /^\d+$/.test(d) && /^\d+$/.test(h) && /^\d+$/.test(m) && /^\d+$/.test(s));
+
+      const img = document.querySelector('.hero-card img');
+      addResult('Product image loaded (or fallback path used)', img && (img.complete && img.naturalWidth > 0), true);
+
+      const leafletOk = !!window.__leafletReady && !!window.L && document.querySelector('#map .leaflet-container, #map.leaflet-container');
+      addResult('Leaflet loaded and map initialized (no L error)', !!leafletOk);
+
+      const pinsOk = document.querySelectorAll('.leaflet-marker-icon').length > 0 || document.getElementById('map-fallback').hidden === false;
+      addResult('Retail locations visible (pins or fallback list)', pinsOk);
+    }
+
+    document.getElementById('diagBtn').addEventListener('click', runDiagnostics);
+
+    // Footer year
+    document.getElementById('yr').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
